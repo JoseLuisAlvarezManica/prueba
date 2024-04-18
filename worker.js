@@ -24,3 +24,11 @@ client.publish('position/topic', positionMessage, {}, (error) => {
         console.error('Publish error:', error);
     }
 });
+if (client) {
+    client.end(false, {}, () => {
+        console.log('Client disconnected');
+        self.postMessage({ status: 'disconnected' });
+        client = null; // Clear the client instance
+    });
+}
+

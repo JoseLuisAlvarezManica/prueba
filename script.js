@@ -79,113 +79,85 @@ async function predictWebcam() {
         lastVideoTime = video.currentTime;
         const detections = objectDetector.detectForVideo(video, startTimeMs);
         displayVideoDetections(detections);
-        if (!intervalID) {
-            intervalID = setInterval(() => {
-                send_info();
-            }, 5000);
+        // Call this function again to keep predicting when the browser is ready.
+        window.requestAnimationFrame(predictWebcam);
+    }
+    function displayVideoDetections(result) {
+        // Remove any highlighting from previous frame.
+        for (let child of children) {
+            liveView.removeChild(child);
+        }
+        children.splice(0);
+        const canvas = document.getElementById("overlayCanvas");
+        canvas.width = video.offsetWidth;
+        canvas.height = video.offsetHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous drawings
+        // Inicializar variables para calcular posicion
+        let totalCenterX = 0;
+        let totalCenterY = 0;
+        const numDetections = result.detections.length;
+        result.detections.forEach((detection) => {
+            const centerX = (video.offsetWidth -
+                detection.boundingBox.width / 2 -
+                detection.boundingBox.originX) /
+                video.offsetWidth;
+            const centerY = (detection.boundingBox.originY + detection.boundingBox.height / 2) /
+                video.offsetHeight;
+            totalCenterX += centerX;
+            totalCenterY += centerY;
+        });
+        averageCenterX = totalCenterX / numDetections;
+        averageCenterY = totalCenterY / numDetections;
+        //console.log("Average Center X:", averageCenterX);
+        //console.log("Average Center Y:", averageCenterY);
+        document.getElementById("averagePosition").innerText = `Average Center X: ${averageCenterX.toFixed(2)}, Average Center Y: ${averageCenterY.toFixed(2)}`;
+        // Iterate through predictions and draw them to the live view
+        for (let detection of result.detections) {
+            const p = document.createElement("p");
+            p.innerText =
+                detection.categories[0].categoryName +
+                    " - with " +
+                    Math.round(parseFloat(detection.categories[0].score) * 100) +
+                    "% confidence.";
+            p.style =
+                "left: " +
+                    (video.offsetWidth -
+                        detection.boundingBox.width -
+                        detection.boundingBox.originX) +
+                    "px;" +
+                    "top: " +
+                    detection.boundingBox.originY +
+                    "px; " +
+                    "width: " +
+                    (detection.boundingBox.width - 10) +
+                    "px;";
+            const highlighter = document.createElement("div");
+            highlighter.setAttribute("class", "highlighter");
+            highlighter.style =
+                "left: " +
+                    (video.offsetWidth -
+                        detection.boundingBox.width -
+                        detection.boundingBox.originX) +
+                    "px;" +
+                    "top: " +
+                    detection.boundingBox.originY +
+                    "px;" +
+                    "width: " +
+                    (detection.boundingBox.width - 10) +
+                    "px;" +
+                    "height: " +
+                    detection.boundingBox.height +
+                    "px;";
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(averageCenterX * canvas.width, averageCenterY * canvas.height, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            liveView.appendChild(highlighter);
+            liveView.appendChild(p);
+            // Store drawn objects in memory so they are queued to delete at next call.
+            children.push(highlighter);
+            children.push(p);
         }
     }
-    else {
-        // Optional: Clear interval if specific conditions are met (e.g., video ends or another state is reached)
-        clearInterval(intervalID);
-        intervalID = null;
-    }
-    // Call this function again to keep predicting when the browser is ready.
-    window.requestAnimationFrame(predictWebcam);
-}
-function displayVideoDetections(result) {
-    // Remove any highlighting from previous frame.
-    for (let child of children) {
-        liveView.removeChild(child);
-    }
-    children.splice(0);
-    const canvas = document.getElementById("overlayCanvas");
-    canvas.width = video.offsetWidth;
-    canvas.height = video.offsetHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous drawings
-    // Inicializar variables para calcular posicion
-    let totalCenterX = 0;
-    let totalCenterY = 0;
-    const numDetections = result.detections.length;
-    result.detections.forEach((detection) => {
-        const centerX = (video.offsetWidth -
-            detection.boundingBox.width / 2 -
-            detection.boundingBox.originX) /
-            video.offsetWidth;
-        const centerY = (detection.boundingBox.originY + detection.boundingBox.height / 2) /
-            video.offsetHeight;
-        totalCenterX += centerX;
-        totalCenterY += centerY;
-    });
-    averageCenterX = totalCenterX / numDetections;
-    averageCenterY = totalCenterY / numDetections;
-    //console.log("Average Center X:", averageCenterX);
-    //console.log("Average Center Y:", averageCenterY);
-    document.getElementById("averagePosition").innerText = `Average Center X: ${averageCenterX.toFixed(2)}, Average Center Y: ${averageCenterY.toFixed(2)}`;
-    // Iterate through predictions and draw them to the live view
-    for (let detection of result.detections) {
-        const p = document.createElement("p");
-        p.innerText =
-            detection.categories[0].categoryName +
-                " - with " +
-                Math.round(parseFloat(detection.categories[0].score) * 100) +
-                "% confidence.";
-        p.style =
-            "left: " +
-                (video.offsetWidth -
-                    detection.boundingBox.width -
-                    detection.boundingBox.originX) +
-                "px;" +
-                "top: " +
-                detection.boundingBox.originY +
-                "px; " +
-                "width: " +
-                (detection.boundingBox.width - 10) +
-                "px;";
-        const highlighter = document.createElement("div");
-        highlighter.setAttribute("class", "highlighter");
-        highlighter.style =
-            "left: " +
-                (video.offsetWidth -
-                    detection.boundingBox.width -
-                    detection.boundingBox.originX) +
-                "px;" +
-                "top: " +
-                detection.boundingBox.originY +
-                "px;" +
-                "width: " +
-                (detection.boundingBox.width - 10) +
-                "px;" +
-                "height: " +
-                detection.boundingBox.height +
-                "px;";
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.arc(averageCenterX * canvas.width, averageCenterY * canvas.height, 5, 0, 2 * Math.PI);
-        ctx.fill();
-        liveView.appendChild(highlighter);
-        liveView.appendChild(p);
-        // Store drawn objects in memory so they are queued to delete at next call.
-        children.push(highlighter);
-        children.push(p);
-    }
-}
-function send_info() {
-    console.log("Sending data:", {
-        x: averageCenterX.toFixed(2),
-        y: averageCenterY.toFixed(2),
-        user: 1
-    });
-    fetch("https://superpinata.com/api", {
-        method: "POST",
-        body: JSON.stringify({
-            x: averageCenterX.toFixed(2),
-            y: averageCenterY.toFixed(2),
-            user: 1
-        }),
-        headers: {
-            "Content-type": "application/json; charset=UTF-8"
-        }
-    });
 }

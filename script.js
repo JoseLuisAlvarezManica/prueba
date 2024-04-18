@@ -1,6 +1,5 @@
 import { ObjectDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2";
 const demosSection = document.getElementById("demos");
-const myWorker = new Worker('worker.js');
 let objectDetector;
 let runningMode = "IMAGE";
 // Initialize the object detector
@@ -170,5 +169,4 @@ async function predictWebcam() {
         }
     }
 }
-if (window.Worker) {
-    myWorker.postmessage({ positionMessage })}
+

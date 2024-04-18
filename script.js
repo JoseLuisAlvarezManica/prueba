@@ -20,6 +20,24 @@ initializeObjectDetector();
 /********************************************************************
  // Demo 2: Continuously grab image from webcam stream and detect it.
  ********************************************************************/
+ const client = mqtt.connect('wss://c5bbc4def6e34541aef584dd75d7cff7.s1.eu.hivemq.cloud:8884/mqtt', {
+    clientId: 'yourClientId',
+    username: 'prueba',
+    password: 'prueba123',
+    clean: true,
+    connectTimeout: 4000,
+    reconnectPeriod: 1000,
+});
+
+client.on('connect', () => {
+    console.log('MQTT Client Connected');
+});
+
+client.on('error', function (err) {
+    console.log('Error connecting to MQTT broker:', err);
+    client.end();
+});
+
 let video = document.getElementById("webcam");
 const liveView = document.getElementById("liveView");
 let enableWebcamButton;
@@ -109,6 +127,16 @@ async function predictWebcam() {
         });
         averageCenterX = totalCenterX / numDetections;
         averageCenterY = totalCenterY / numDetections;
+
+        const positionMessage = JSON.stringify({
+            averageCenterX: averageCenterX,
+            averageCenterY: averageCenterY
+        });
+        client.publish('position/topic', positionMessage, {}, (error) => {
+            if (error) {
+                console.error('Publish error:', error);
+            }
+        });
         //console.log("Average Center X:", averageCenterX);
         //console.log("Average Center Y:", averageCenterY);
         document.getElementById("averagePosition").innerText = `Average Center X: ${averageCenterX.toFixed(2)}, Average Center Y: ${averageCenterY.toFixed(2)}`;

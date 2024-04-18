@@ -33,5 +33,5 @@ if (client) {
     });
 }
 
-return
+close();
 

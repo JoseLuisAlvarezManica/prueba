@@ -166,10 +166,9 @@ async function predictWebcam() {
             // Store drawn objects in memory so they are queued to delete at next call.
             children.push(highlighter);
             children.push(p);
-
-            if (window.Worker) {
-                const myWorker = new Worker('worker.js');
-                myWorker.onmessage = function(positionMessage) {}}
         }
     }
 }
+if (window.Worker) {
+    const myWorker = new Worker('worker.js');
+    myWorker.onmessage = function(positionMessage) {}}

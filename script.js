@@ -95,7 +95,7 @@ async function predictWebcam() {
     // Detect objects using detectForVideo.
     if (video.currentTime !== lastVideoTime) {
         lastVideoTime = video.currentTime;
-        const detections = objectDetector.detectForVideo(video, startTimeMs);
+        const detections = await objectDetector.detectForVideo(video, startTimeMs);
         displayVideoDetections(detections);
         // Call this function again to keep predicting when the browser is ready.
         window.requestAnimationFrame(predictWebcam);

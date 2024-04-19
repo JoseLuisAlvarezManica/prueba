@@ -20,8 +20,6 @@ initializeObjectDetector();
 /********************************************************************
  // Demo 2: Continuously grab image from webcam stream and detect it.
  ********************************************************************/
-
-
 let video = document.getElementById("webcam");
 const liveView = document.getElementById("liveView");
 let enableWebcamButton;
@@ -79,7 +77,7 @@ async function predictWebcam() {
     // Detect objects using detectForVideo.
     if (video.currentTime !== lastVideoTime) {
         lastVideoTime = video.currentTime;
-        const detections = await objectDetector.detectForVideo(video, startTimeMs);
+        const detections = objectDetector.detectForVideo(video, startTimeMs);
         displayVideoDetections(detections);
         // Call this function again to keep predicting when the browser is ready.
         window.requestAnimationFrame(predictWebcam);
@@ -111,12 +109,6 @@ async function predictWebcam() {
         });
         averageCenterX = totalCenterX / numDetections;
         averageCenterY = totalCenterY / numDetections;
-
-        const positionMessage = JSON.stringify({
-            averageCenterX: averageCenterX,
-            averageCenterY: averageCenterY
-        });
-
         //console.log("Average Center X:", averageCenterX);
         //console.log("Average Center Y:", averageCenterY);
         document.getElementById("averagePosition").innerText = `Average Center X: ${averageCenterX.toFixed(2)}, Average Center Y: ${averageCenterY.toFixed(2)}`;
@@ -169,4 +161,3 @@ async function predictWebcam() {
         }
     }
 }
-
